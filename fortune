@@ -1,20 +1,20 @@
 #!/usr/bin/env ruby 
 
 # == Synopsis 
-#   This is a sample description of the application.
-#   Blah blah blah.
+#   Wikipedia: fortune is a simple program that displays a random message from a database of quotations. Most distributions 
+#   of fortune are bundled with files of quotations from famous people, sayings like those found on fortune cookies (hence the name), 
+#   and other humorous items. fortune is predominantly found on Unix-like systems, but clients for other platforms exist as well. 
+#   Often, users on text-mode Unix terminals will place this command into either their .profile or .logout files to display them at 
+#   logon and logout, respectively.
 #
 # == Examples
-#   This command does blah blah blah.
-#     fortune foo.txt
-#
-#   Other examples:
-#     fortune -q bar.doc
-#     fortune --verbose foo.html
+#   fortune                           => Prints one random fortune
+#   fortune -a -p Einstein            => Prints all fortunes containing Einstein
+#   fortune --print-topics            => Prints all available topics
+#   fortune -t art,science            => Prints one fortune from domains art or science
 #
 # == Usage 
 #   fortune [options]
-#   fortune topics
 #
 #   For help use: fortune -h
 #
@@ -23,7 +23,7 @@
 #   -V, --verbose           Verbose output
 #   -t, --topics [TOPICS]   Comma delimited list of topics to restrict the fortune to. Pass nothing to use all topics.
 #   -p, --pattern REGEX     A regular expression to match.  
-#   -a, --all               Find all fortunes. A pattern must be specified 
+#   -a, --all               Find all fortunes. A pattern must be specified.
 #   -i                      Case insensitive search on given pattern.
 #   --print-topics          Prints all available topics, all other options are ignored.
 #
@@ -73,7 +73,7 @@ class Fortune
       opts.on('-h', '--help')       { output_help }
       opts.on('-V', '--verbose')    { @options.verbose = true }
       opts.on('-p', '--pattern PATTERN') { |pattern| @options.pattern = pattern }
-      opts.on('-t', '--topics')     { |topics| @options.topics = topics }
+      opts.on('-t', '--topics TOPICS')     { |topics| @options.topics = topics.split(",") }
       opts.on('-a', '--all')         {|find_all| @options.find_all = true }
       opts.on('-i') { @options.case_sensitive = false }
             
