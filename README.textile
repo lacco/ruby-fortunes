@@ -1,0 +1,10 @@
+h1. INSTALL
+
+# Download/ clone ruby-fortunes
+# Install httparty
+<pre>
+<code>
+  sudo gem install httparty
+</code>
+</pre>
+# <code>(ruby) fortune -h</code>
