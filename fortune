@@ -1,0 +1,128 @@
+#!/usr/bin/env ruby 
+
+# == Synopsis 
+#   This is a sample description of the application.
+#   Blah blah blah.
+#
+# == Examples
+#   This command does blah blah blah.
+#     fortune foo.txt
+#
+#   Other examples:
+#     fortune -q bar.doc
+#     fortune --verbose foo.html
+#
+# == Usage 
+#   fortune [options]
+#   fortune topics
+#
+#   For help use: fortune -h
+#
+# == Options
+#   -h, --help              Displays help message
+#   -V, --verbose           Verbose output
+#   -t, --topics [TOPICS]   Comma delimited list of topics to restrict the fortune to. Pass nothing to use all topics.
+#   -p, --pattern REGEX     A regular expression to match.  
+#   -a, --all               Find all fortunes. A pattern must be specified 
+#   -i                      Case insensitive search on given pattern.
+#   --print-topics          Prints all available topics, all other options are ignored.
+#
+# == Author
+#   Kai Schlichting
+#
+# == Copyright
+#   Copyright (c) 2009 Kai Schlichting. Licensed under the MIT License:
+#   http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse' 
+require 'rdoc/usage'
+require 'ostruct'
+require 'date'
+require 'fortune_service'
+
+class Fortune
+  attr_reader :options
+
+  def initialize(arguments, stdin)
+    @arguments = arguments
+    @stdin = stdin
+    
+    # Set defaults
+    @options = OpenStruct.new
+    @options.verbose = false
+    @options.find_all = false
+  end
+
+  # Parse options, check arguments, then process the command
+  def run
+    if parsed_options? && arguments_valid? 
+      output_options if @options.verbose # [Optional]
+
+      process_command
+    else
+      output_usage
+    end
+  end
+  
+  protected
+  
+    def parsed_options?
+      # Specify options
+      opts = OptionParser.new
+      opts.on('--print-topics')    { output_topics ; exit 0 }
+      opts.on('-h', '--help')       { output_help }
+      opts.on('-V', '--verbose')    { @options.verbose = true }
+      opts.on('-p', '--pattern PATTERN') { |pattern| @options.pattern = pattern }
+      opts.on('-t', '--topics')     { |topics| @options.topics = topics }
+      opts.on('-a', '--all')         {|find_all| @options.find_all = true }
+      opts.on('-i') { @options.case_sensitive = false }
+            
+      opts.parse!(@arguments) rescue return false
+
+      true      
+    end
+    
+    def output_options
+      puts "Options:\n"
+      
+      @options.marshal_dump.each do |name, val|        
+        puts "  #{name} = #{val}"
+      end
+    end
+
+    def arguments_valid?
+      true# if @arguments.length == 1 
+    end
+    
+    def output_help
+      RDoc::usage() #exits app
+    end
+    
+    def output_usage
+      RDoc::usage('usage') # gets usage from comments above
+    end
+    
+    def output_topics
+      puts FortuneService.topics.sort.join(", ")
+    end
+    
+    def process_command
+      fortunes = FortuneService.fortunes({
+        :topics => @options.topics,
+        :min_length => @options.min_length,
+        :max_length => @options.max_length,
+        :pattern => @options.pattern,
+        :case_sensitive => @options.case_sensitive,
+        :find_all => @options.find_all
+      })
+      
+      if fortunes.kind_of?(Array)
+        puts fortunes.join("\n========================== \n")
+      else
+        puts fortunes
+      end
+    end
+end
+
+# Create and run the application
+Fortune.new(ARGV, STDIN).run
