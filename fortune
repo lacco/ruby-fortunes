@@ -26,6 +26,8 @@
 #   -a, --all               Find all fortunes. A pattern must be specified.
 #   -i                      Case insensitive search on given pattern.
 #   --print-topics          Prints all available topics, all other options are ignored.
+#   --min-length LENGTH     Minimum length of fortune (0 for no minimum length).
+#   --max-length LENGTH     Maximum length of fortune (0 for no maximum length).
 #
 # == Author
 #   Kai Schlichting
@@ -76,6 +78,8 @@ class Fortune
       opts.on('-t', '--topics TOPICS')     { |topics| @options.topics = topics.split(",") }
       opts.on('-a', '--all')         {|find_all| @options.find_all = true }
       opts.on('-i') { @options.case_sensitive = false }
+      opts.on('--max-length LENGTH') {|length| @options.max_length = length.to_i }
+      opts.on('--min-length LENGTH') {|length| @options.min_length = length.to_i }
             
       opts.parse!(@arguments) rescue return false
 
