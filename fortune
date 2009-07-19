@@ -26,14 +26,15 @@
 #   -a, --all               Find all fortunes. A pattern must be specified.
 #   -i                      Case insensitive search on given pattern.
 #   --print-topics          Prints all available topics, all other options are ignored.
+#   --print-topics-array    Prints all available topics, using array instead of list operation for fortune web service
 #   --min-length LENGTH     Minimum length of fortune (0 for no minimum length).
 #   --max-length LENGTH     Maximum length of fortune (0 for no maximum length).
 #
 # == Author
-#   Kai Schlichting
+#   Kai Schlichting, Alexander Lueders
 #
 # == Copyright
-#   Copyright (c) 2009 Kai Schlichting. Licensed under the MIT License:
+#   Copyright (c) 2009 Kai Schlichting, Alexander Lueders. Licensed under the MIT License:
 #   http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse' 
@@ -71,7 +72,8 @@ class Fortune
     def parsed_options?
       # Specify options
       opts = OptionParser.new
-      opts.on('--print-topics')    { output_topics ; exit 0 }
+      opts.on('--print-topics')    { output_topics(:list) ; exit 0 }
+      opts.on('--print-topics-array') { output_topics(:array) ; exit 0 }
       opts.on('-h', '--help')       { output_help }
       opts.on('-V', '--verbose')    { @options.verbose = true }
       opts.on('-p', '--pattern PATTERN') { |pattern| @options.pattern = pattern }
@@ -106,9 +108,11 @@ class Fortune
       RDoc::usage('usage') # gets usage from comments above
     end
     
-    def output_topics
-      puts FortuneService.topics.sort.join(", ")
+    # operation: :list or :array
+    def output_topics(operation = :list)
+      puts FortuneService.topics({:verbose => @options.verbose}.merge(:operation => operation)).sort.join(", ")
     end
+    
     
     def process_command
       fortunes = FortuneService.fortunes({
@@ -117,7 +121,8 @@ class Fortune
         :max_length => @options.max_length,
         :pattern => @options.pattern,
         :case_sensitive => @options.case_sensitive,
-        :find_all => @options.find_all
+        :find_all => @options.find_all,
+        :verbose => @options.verbose
       })
       
       if fortunes.kind_of?(Array)

@@ -1,6 +1,6 @@
 h1. About
 
-Fortune library and command line tool using "The Fortune Web Service":http://www.alagad.com/go/products-and-projects/the-fortune-web-service/the-fortune-web-service
+Fortune library and command line tool using "The Fortune Web Service":http://www.alagad.com/go/products-and-projects/the-fortune-web-service/the-fortune-web-service.
 
 h1. Install
 

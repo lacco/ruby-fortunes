@@ -9,14 +9,14 @@ class FortuneService
   # Sets content-type to xml
   format :xml
   
-  TOPICS_SOAP_TEMPLATE = <<-XML
+  TOPICS_SOAP_TEMPLATE = ERB.new <<-EOF
     <soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:for="http://fortune.webservices">
        <soapenv:Header/>
        <soapenv:Body>
-          <for:getTopicsList soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+          <for:getTopics<%= operation == :list ? 'List' : 'Array'%> soapenv:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
        </soapenv:Body>
     </soapenv:Envelope>
-  XML
+  EOF
   
   FORTUNE_SOAP_TEMPLATE = ERB.new <<-EOF
       <soapenv:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:for="http://fortune.webservices">
@@ -35,10 +35,18 @@ class FortuneService
       </soapenv:Envelope>
     EOF
   
-  def self.topics
-    self.post_soap(TOPICS_SOAP_TEMPLATE)["ns1:getTopicsListResponse"]["getTopicsListReturn"].split(",")
+  def self.topics(opts = {})
+    operation = opts[:operation] || :list
+    
+    response = self.post_soap(TOPICS_SOAP_TEMPLATE.result(binding), {:verbose => opts[:verbose]})
+
+    if operation == :list 
+      response["ns1:getTopicsListResponse"]["getTopicsListReturn"].split(",") 
+    else 
+      response["ns1:getTopicsArrayResponse"]["getTopicsArrayReturn"]["getTopicsArrayReturn"]
+    end
   end
-  
+
   def self.fortunes(opts = {})
     raise ArgumentError, "find_all is only allowed if pattern is given" if opts[:find_all] && opts[:pattern].nil?
   
@@ -65,12 +73,28 @@ class FortuneService
       "getFortune"
     end
 
-    response = self.post_soap(FORTUNE_SOAP_TEMPLATE.result(binding))["ns1:#{operation}Response"]["#{operation}Return"]
+    response = self.post_soap(FORTUNE_SOAP_TEMPLATE.result(binding), {:verbose => opts[:verbose]})["ns1:#{operation}Response"]["#{operation}Return"]
     
     find_all ? response["#{operation}Return"] : response
   end
   
-  def self.post_soap(soap)
-    self.post("", :body => soap, :headers => {"SOAPAction" => ""})["soapenv:Envelope"]["soapenv:Body"]
+  def self.post_soap(soap, opts={})
+    response = self.post("", :body => soap, :headers => {"SOAPAction" => ""})
+
+    if opts[:verbose]
+      sep = "============================="
+      puts sep
+      puts "Request"
+      puts sep
+      puts soap
+      
+      puts sep
+      puts "Response"
+      puts sep
+      puts response.body
+      puts sep
+    end
+
+    response["soapenv:Envelope"]["soapenv:Body"]
   end
 end
